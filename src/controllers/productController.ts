@@ -1,8 +1,26 @@
+/**
+ * @swagger
+ * tags:
+ *   name: Products
+ *   description: Product management (Admin, Vendor, Public access)
+ */
 
 import { Response } from 'express';
 import mongoose from 'mongoose';
 import Product from '../models/Product';
 import Category from '../models/Categories';
+/**
+ * @swagger
+ * /products:
+ *   get:
+ *     summary: Get all products (public)
+ *     tags: [Products]
+ *     responses:
+ *       200:
+ *         description: Products retrieved successfully
+ *       500:
+ *         description: Server error
+ */
 
 // 1. GET ALL PRODUCTS - Umuntu wese arabibona (Public)
 export const getProducts = async (req: any, res: Response) => {
@@ -13,6 +31,47 @@ export const getProducts = async (req: any, res: Response) => {
         res.status(500).json({ error: "Server error" });
     }
 };
+/**
+ * @swagger
+ * /products:
+ *   post:
+ *     summary: Create a new product (Admin or Vendor)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - price
+ *               - category
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: iPhone 15
+ *               price:
+ *                 type: number
+ *                 example: 1200
+ *               category:
+ *                 type: string
+ *                 example: 65a12f9e8c9b123456789012
+ *               inStock:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       201:
+ *         description: Product created successfully
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
 
 // 2. CREATE PRODUCT - Admin cyangwa Vendor
 export const createProduct = async (req: any, res: Response) => {
@@ -44,6 +103,37 @@ export const createProduct = async (req: any, res: Response) => {
         res.status(400).json({ error: error.message });
     }
 };
+/**
+ * @swagger
+ * /products/{id}:
+ *   put:
+ *     summary: Update a product (Admin or owning Vendor)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Product updated successfully
+ *       400:
+ *         description: Update failed
+ *       403:
+ *         description: Forbidden – not product owner
+ *       404:
+ *         description: Product not found
+ */
 
 // 3. UPDATE PRODUCT - Admin (yose) cyangwa Vendor (ibye gusa)
 export const updateProduct = async (req: any, res: Response) => {
@@ -65,6 +155,29 @@ export const updateProduct = async (req: any, res: Response) => {
         res.status(400).json({ error: "Guhindura byanze" });
     }
 };
+/**
+ * @swagger
+ * /products/{id}:
+ *   delete:
+ *     summary: Delete a product (Admin or owning Vendor)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Product deleted successfully
+ *       403:
+ *         description: Forbidden – not product owner
+ *       404:
+ *         description: Product not found
+ */
 
 // 4. DELETE SINGLE PRODUCT - Admin (yose) cyangwa Vendor (ibye gusa)
 export const deleteProduct = async (req: any, res: Response) => {
@@ -86,6 +199,22 @@ export const deleteProduct = async (req: any, res: Response) => {
         res.status(400).json({ error: "Gusiba byanze" });
     }
 };
+/**
+ * @swagger
+ * /products:
+ *   delete:
+ *     summary: Delete all products (Admin only)
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All products deleted successfully
+ *       403:
+ *         description: Forbidden – Admin only
+ *       500:
+ *         description: Server error
+ */
 
 // 5. DELETE ALL PRODUCTS - Admin Gusa
 export const deleteAllProducts = async (req: any, res: Response) => {
