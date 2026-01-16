@@ -4,14 +4,14 @@ const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Dessert Shop API',
+      title: 'Links E-Commerce API',
       version: '1.0.0',
-      description: 'API documentation for Tasks 0-5',
+      description: 'API documentation for E-Commerce Platform',
     },
     servers: [
-  { url: 'http://localhost:3000' },
-  { url: 'https://links-frzr.onrender.com' }
-],
+      { url: 'http://localhost:3000/api' },
+      { url: 'https://links-frzr.onrender.com/api' }
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -21,8 +21,12 @@ const options: swaggerJsdoc.Options = {
         },
       },
     },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
-  // This glob pattern finds documentation in all controller files
   apis: ['./src/controllers/*.ts'],
 };
 
