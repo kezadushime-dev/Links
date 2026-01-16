@@ -20,6 +20,8 @@ router.put('/:id', protect, authorize('Admin', 'Vendor'), updateProduct);
 router.delete('/:id', protect, authorize('Admin', 'Vendor'), deleteProduct);
 
 // Admin ONLY route (Delete All)
+// Admin ONLY route (Delete All)
 router.delete('/', protect, authorize('Admin'), deleteAllProducts); 
+
 
 export default router;

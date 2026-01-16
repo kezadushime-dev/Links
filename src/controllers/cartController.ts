@@ -1,8 +1,8 @@
 /**
  * @swagger 
  * tags:
- * name: Cart
- * description: Cart management for users
+ *   - name: Cart
+ *     description: Cart management for users
  */
 import { Response } from 'express';
 import mongoose from 'mongoose';
@@ -13,18 +13,18 @@ import { AuthRequest } from '../type';
 /**
  * @swagger
  * /cart:
- * get:
- * summary: Get logged-in user's cart
- * tags: [Cart]
- * security:
- * - bearerAuth: []
- * responses:
- * 200:
- * description: Cart items retrieved successfully
- * 401:
- * description: Unauthorized
- * 500:
- * description: Failed to retrieve cart
+ *   get:
+ *     summary: Get logged-in user's cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart items retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Failed to retrieve cart
  */
 export const getCart = async (req: AuthRequest, res: Response) => {
     try {
@@ -38,33 +38,33 @@ export const getCart = async (req: AuthRequest, res: Response) => {
 /**
  * @swagger
  * /cart:
- * post:
- * summary: Add a product to cart
- * tags: [Cart]
- * security:
- * - bearerAuth: []
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * type: object
- * required:
- * - productId
- * properties:
- * productId:
- * type: string
- * example: 65a12f9e8c9b123456789012
- * quantity:
- * type: number
- * example: 2
- * responses:
- * 201:
- * description: Product added to cart
- * 400:
- * description: Invalid product ID
- * 404:
- * description: Product not found
+ *   post:
+ *     summary: Add a product to cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - productId
+ *             properties:
+ *               productId:
+ *                 type: string
+ *                 example: 65a12f9e8c9b123456789012
+ *               quantity:
+ *                 type: number
+ *                 example: 2
+ *     responses:
+ *       201:
+ *         description: Product added to cart
+ *       400:
+ *         description: Invalid product ID
+ *       404:
+ *         description: Product not found
  */
 export const addToCart = async (req: AuthRequest, res: Response) => {
     try {
@@ -72,10 +72,11 @@ export const addToCart = async (req: AuthRequest, res: Response) => {
         if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({ error: "ID y'igicuruzwa ntabwo yanditse neza" });
         }
-        const productExists = await Product.findById(productId);
-        if (!productExists) {
-            return res.status(404).json({ error: "Iki gicuruzwa ntikiri mu iduka" });
-        }
+        const id = Array.isArray(productId) ? productId[0] : productId;
+if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: "ID y'igicuruzwa ntabwo yanditse neza" });
+}
+
         const newItem = new Cart({ 
             productId, 
             quantity: quantity || 1,
@@ -91,29 +92,30 @@ export const addToCart = async (req: AuthRequest, res: Response) => {
 /**
  * @swagger
  * /cart/{id}:
- * delete:
- * summary: Remove an item from cart
- * tags: [Cart]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema:
- * type: string
- * description: Cart item ID
- * responses:
- * 200:
- * description: Item removed from cart
- * 400:
- * description: Invalid cart ID
- * 404:
- * description: Cart item not found
+ *   delete:
+ *     summary: Remove an item from cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Cart item ID
+ *     responses:
+ *       200:
+ *         description: Item removed from cart
+ *       400:
+ *         description: Invalid cart ID
+ *       404:
+ *         description: Cart item not found
  */
 export const removeFromCart = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+       const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
         if (!id || !mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: "ID ya Cart ntabwo ari yo" });
         }
@@ -130,14 +132,14 @@ export const removeFromCart = async (req: AuthRequest, res: Response) => {
 /**
  * @swagger
  * /cart/clear:
- * delete:
- * summary: Clear all items from user's cart
- * tags: [Cart]
- * security:
- * - bearerAuth: []
- * responses:
- * 200:
- * description: Cart cleared successfully
+ *   delete:
+ *     summary: Clear all items from user's cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart cleared successfully
  */
 export const clearCart = async (req: AuthRequest, res: Response) => {
     try {
