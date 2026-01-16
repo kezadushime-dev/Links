@@ -1,15 +1,12 @@
-import { Router } from 'express';
-import { register, login, getProfile, changePassword } from '../controllers/authController';
-import { protect } from '../middleware/authMiddleware';
+import { register, login, getProfile, changePassword, createTestUser } from '../controllers/authController';
+import { authMiddleware } from '../middleware/authMiddleware';
 
-const router = Router();
+const router = require('express').Router();
 
 router.post('/register', register);
 router.post('/login', login);
-
-// Izi routes zisaba ko uba winjiye (Logged in)
-router.get('/profile', protect, getProfile);
-
-router.put('/change-password', protect, changePassword);
+router.post('/test-user', createTestUser);
+router.get('/profile', authMiddleware, getProfile);
+router.put('/change-password', authMiddleware, changePassword);
 
 export default router;
