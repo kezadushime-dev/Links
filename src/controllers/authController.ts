@@ -55,11 +55,14 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Email already in use" });
     }
 
-    // ❌ DO NOT HASH HERE
+  
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const newUser = new User({
       username,
       email,
-      password, // plain password
+      password: hashedPassword, 
       role: role || 'Customer'
     });
 
