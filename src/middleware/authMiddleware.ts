@@ -1,41 +1,37 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = "ijambo_ryihariye_321"; 
+const JWT_SECRET = process.env.JWT_SECRET || 'your_fallback_secret';
 
 /**
  * Middleware yo kurinda inzira (Protect Routes)
- * Igenzura niba Token ari iy'ukuri ikongeramo user n'uruhushya (role)
  */
-export const protect = async (req: Request | any, res: Response, next: NextFunction) => {
+export const protect = async (req: any, res: Response, next: NextFunction) => {
     try {
         let token: string | undefined;
 
-        // 1. Reba niba Token iri mu mitwe (Headers) ya Request
+        // 1. Reba niba Token iri mu Headers
         if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-            // Fata code ya token ukuyeho ijambo 'Bearer'
             token = req.headers.authorization.split(' ')[1];
         }
 
-        // 2. Niba nta token ihari, hagarika request
+        // 2. Niba nta token ihari
         if (!token) {
             return res.status(401).json({ error: "Ntabwo wemerewe kwinjira, nta Token ihari" });
         }
 
-        // 3. Gereranya Token na ya Secret yacu
+        // 3. Verify Token
         const decoded = jwt.verify(token, JWT_SECRET) as any;
 
-        // 4. Shyira amakuru mu muryango wa 'req' kugira ngo izindi controller ziyakoreshe
-        // Ibi ni ingenzi cyane kuri Task 3 (Cart) na Task 4 (RBAC)
-        req.user = decoded.id;      // Bika ID y'umuntu
-        req.userRole = decoded.role; // Bika Role (Admin/Vendor/Customer)
+        // 4. Shyira amakuru muri req
+        // Ibi bihura neza na controllers twubatse (req.user na req.userRole)
+        req.user = decoded.id;      
+        req.userRole = decoded.role; 
 
-        // Ibi bizagufasha kureba muri Terminal niba bikora
-        console.log(`Uwinjiye afite Role: ${req.userRole}`);
+        console.log(`Log: User ${req.user} connected as ${req.userRole}`);
 
-        next(); // Reba ku nzira ikurikira (Controller)
+        next(); 
     } catch (error) {
-        // Niba token yararangiye (expired) cyangwa ari impimbano
         res.status(401).json({ error: "Token ntabwo ari yo cyangwa yararangiye" });
     }
 };

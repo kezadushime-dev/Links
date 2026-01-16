@@ -18,10 +18,11 @@ app.use(express.json());
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Database
-mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/my_store')
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch(err => console.error('❌ MongoDB Connection Error:', err));
+// --- UPDATED: LOCAL MONGODB CONNECTION ---
+// Change 'my_local_db' to whatever you want your database to be named
+mongoose.connect(process.env.MONGO_URI!)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch(err => console.error(err));
 
 // Routes
 app.use('/api/auth', authRoutes);

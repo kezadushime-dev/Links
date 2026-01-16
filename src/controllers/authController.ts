@@ -9,7 +9,8 @@ import User from '../models/User';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
-const JWT_SECRET = process.env.JWT_SECRET || "ijambo_ryihariye_321";
+const JWT_SECRET = process.env.JWT_SECRET!;
+
 /**
  * @swagger
  * /auth/register:
@@ -46,38 +47,38 @@ const JWT_SECRET = process.env.JWT_SECRET || "ijambo_ryihariye_321";
  *         description: Email already in use
  */
 export const register = async (req: Request, res: Response) => {
-    try {
-        const { username, email, password, role } = req.body;
+  try {
+    const { username, email, password, role } = req.body;
 
-        // Check if user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ error: "Email already in use" });
-        }
-
-        // Create new user (Role defaults to 'Customer' if not provided)
-        const newUser = new User({ 
-            username, 
-            email, 
-            password, 
-            role: role || 'Customer' 
-        });
-
-        await newUser.save();
-        
-        res.status(201).json({ 
-            message: "User registered successfully!", 
-            user: { 
-                id: newUser._id, 
-                username: newUser.username, 
-                email: newUser.email,
-                role: newUser.role 
-            } 
-        });
-    } catch (error: any) {
-        res.status(400).json({ error: error.message });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already in use" });
     }
+
+    // ❌ DO NOT HASH HERE
+    const newUser = new User({
+      username,
+      email,
+      password, // plain password
+      role: role || 'Customer'
+    });
+
+    await newUser.save();
+
+    res.status(201).json({
+      message: "User registered successfully",
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role
+      }
+    });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
 };
+
 /**
  * @swagger
  * /auth/login:
