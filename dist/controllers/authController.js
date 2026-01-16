@@ -7,7 +7,7 @@ exports.changePassword = exports.getProfile = exports.login = exports.register =
 const User_1 = __importDefault(require("../models/User"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const JWT_SECRET = process.env.JWT_SECRET || "ijambo_ryihariye_321";
+const JWT_SECRET = process.env.JWT_SECRET;
 /**
  * @swagger
  * /auth/register:
@@ -46,24 +46,20 @@ const JWT_SECRET = process.env.JWT_SECRET || "ijambo_ryihariye_321";
 const register = async (req, res) => {
     try {
         const { username, email, password, role } = req.body;
-        // 1. Check if user already exists
         const existingUser = await User_1.default.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ error: "Email already in use" });
         }
-        // 2. HASH THE PASSWORD (Crucial fix)
-        const salt = await bcryptjs_1.default.genSalt(10);
-        const hashedPassword = await bcryptjs_1.default.hash(password, salt);
-        // 3. Create new user with Hashed Password
+        // ❌ DO NOT HASH HERE
         const newUser = new User_1.default({
             username,
             email,
-            password: hashedPassword,
+            password, // plain password
             role: role || 'Customer'
         });
         await newUser.save();
         res.status(201).json({
-            message: "User registered successfully!",
+            message: "User registered successfully",
             user: {
                 id: newUser._id,
                 username: newUser.username,

@@ -13,7 +13,10 @@ const options = {
             version: '1.0.0',
             description: 'API documentation for Tasks 0-5',
         },
-        servers: [{ url: 'http://localhost:3000' }],
+        servers: [
+            { url: 'http://localhost:3000' },
+            { url: 'https://YOUR-RENDER-URL.onrender.com' }
+        ],
         components: {
             securitySchemes: {
                 bearerAuth: {

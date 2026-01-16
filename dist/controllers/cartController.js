@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.clearCart = exports.removeFromCart = exports.addToCart = exports.getCart = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const Cart_1 = __importDefault(require("../models/Cart"));
-const Product_1 = __importDefault(require("../models/Product"));
 /**
  * @swagger
  * /cart:
@@ -23,10 +22,8 @@ const Product_1 = __importDefault(require("../models/Product"));
  *       500:
  *         description: Failed to retrieve cart
  */
-// 1. GET CART - Reba isakoshi y'umuntu winjiye gusa
 const getCart = async (req, res) => {
     try {
-        // Shaka ibintu muri Cart bifite userId ihura n'iyo muri Token
         const items = await Cart_1.default.find({ userId: req.user }).populate('productId');
         res.json(items);
     }
@@ -66,18 +63,16 @@ exports.getCart = getCart;
  *       404:
  *         description: Product not found
  */
-// 2. ADD TO CART - Shyira igicuruzwa mu isakoshi yawe
 const addToCart = async (req, res) => {
     try {
         const { productId, quantity } = req.body;
         if (!productId || !mongoose_1.default.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({ error: "ID y'igicuruzwa ntabwo yanditse neza" });
         }
-        const productExists = await Product_1.default.findById(productId);
-        if (!productExists) {
-            return res.status(404).json({ error: "Iki gicuruzwa ntikiri mu iduka" });
+        const id = Array.isArray(productId) ? productId[0] : productId;
+        if (!id || !mongoose_1.default.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: "ID y'igicuruzwa ntabwo yanditse neza" });
         }
-        // Hano twongeraho 'userId' ikurwa muri Token (req.user)
         const newItem = new Cart_1.default({
             productId,
             quantity: quantity || 1,
@@ -89,7 +84,9 @@ const addToCart = async (req, res) => {
     catch (error) {
         res.status(400).json({ error: error.message });
     }
-}; /**
+};
+exports.addToCart = addToCart;
+/**
  * @swagger
  * /cart/{id}:
  *   delete:
@@ -112,15 +109,12 @@ const addToCart = async (req, res) => {
  *       404:
  *         description: Cart item not found
  */
-exports.addToCart = addToCart;
-// 3. REMOVE FROM CART - Siba ikintu mu isakoshi yawe gusa
 const removeFromCart = async (req, res) => {
     try {
-        const id = req.params.id;
+        const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
         if (!id || !mongoose_1.default.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: "ID ya Cart ntabwo ari yo" });
         }
-        // Genzura ko usiba ari nyir'isakoshi (userId ihure n'iya req.user)
         const deleted = await Cart_1.default.findOneAndDelete({ _id: id, userId: req.user });
         if (!deleted) {
             return res.status(404).json({ error: "Icyo kintu ntikiri mu isakoshi yawe" });
@@ -143,15 +137,9 @@ exports.removeFromCart = removeFromCart;
  *     responses:
  *       200:
  *         description: Cart cleared successfully
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Failed to clear cart
  */
-// 4. CLEAR CART - Siba isakoshi yawe yose
 const clearCart = async (req, res) => {
     try {
-        // Siba gusa ibintu bifite userId yawe
         await Cart_1.default.deleteMany({ userId: req.user });
         res.status(200).json({ message: "Isakoshi yawe yasibwe yose!" });
     }

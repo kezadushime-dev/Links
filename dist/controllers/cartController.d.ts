@@ -1,10 +1,11 @@
 /**
  * @swagger
  * tags:
- *   name: Cart
- *   description: Cart management for users
+ *   - name: Cart
+ *     description: Cart management for users
  */
 import { Response } from 'express';
+import { AuthRequest } from '../type';
 /**
  * @swagger
  * /cart:
@@ -21,7 +22,7 @@ import { Response } from 'express';
  *       500:
  *         description: Failed to retrieve cart
  */
-export declare const getCart: (req: any, res: Response) => Promise<void>;
+export declare const getCart: (req: AuthRequest, res: Response) => Promise<void>;
 /**
  * @swagger
  * /cart:
@@ -53,7 +54,8 @@ export declare const getCart: (req: any, res: Response) => Promise<void>;
  *       404:
  *         description: Product not found
  */
-export declare const addToCart: (req: any, res: Response) => Promise<Response<any, Record<string, any>> | undefined>; /**
+export declare const addToCart: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
+/**
  * @swagger
  * /cart/{id}:
  *   delete:
@@ -76,7 +78,7 @@ export declare const addToCart: (req: any, res: Response) => Promise<Response<an
  *       404:
  *         description: Cart item not found
  */
-export declare const removeFromCart: (req: any, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
+export declare const removeFromCart: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
 /**
  * @swagger
  * /cart/clear:
@@ -88,10 +90,6 @@ export declare const removeFromCart: (req: any, res: Response) => Promise<Respon
  *     responses:
  *       200:
  *         description: Cart cleared successfully
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Failed to clear cart
  */
-export declare const clearCart: (req: any, res: Response) => Promise<void>;
+export declare const clearCart: (req: AuthRequest, res: Response) => Promise<void>;
 //# sourceMappingURL=cartController.d.ts.map
