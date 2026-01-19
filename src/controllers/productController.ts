@@ -8,7 +8,96 @@ import { Request, Response } from 'express';
 import mongoose, { Model } from 'mongoose';
 import Product, { IProduct } from '../models/Product';
 
-const ProductModel = Product as Model<IProduct>; // TS-safe
+const ProductModel = Product as Model<IProduct>;
+
+/**
+ * @swagger
+ * /products:
+ *   post:
+ *     summary: Create a new product
+ *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - price
+ *               - category
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Laptop"
+ *               description:
+ *                 type: string
+ *                 example: "High performance laptop"
+ *               price:
+ *                 type: number
+ *                 example: 1200
+ *               category:
+ *                 type: string
+ *                 example: "Electronics"
+ *               vendorId:
+ *                 type: string
+ *                 example: "696a2d68cd2bb6ed2833c06b"
+ *               inStock:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       201:
+ *         description: Product created successfully
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+export const createProduct = async (req: any, res: Response) => {
+  try {
+    const { name, price, category, description, inStock } = req.body;
+
+    // Validate required fields
+    if (!name || !price || !category) {
+      return res.status(400).json({
+        error: "Missing required fields: name, price, category"
+      });
+    }
+
+    // Validate price
+    if (typeof price !== 'number' || price <= 0) {
+      return res.status(400).json({
+        error: "Price must be a positive number"
+      });
+    }
+
+    // Create product with vendorId from authenticated user
+    const product = new ProductModel({
+      name,
+      description: description || "",
+      price,
+      category,
+      vendorId: req.user,
+      inStock: inStock !== undefined ? inStock : true
+    });
+
+    await product.save();
+
+    return res.status(201).json({
+      message: "Product created successfully",
+      product
+    });
+  } catch (error: any) {
+    console.error("Create product error:", error);
+    return res.status(500).json({
+      error: error.message || "Internal server error"
+    });
+  }
+};
 
 /**
  * @swagger
@@ -18,18 +107,27 @@ const ProductModel = Product as Model<IProduct>; // TS-safe
  *     tags: [Product]
  *     responses:
  *       200:
- *         description: List of products
+ *         description: Products retrieved successfully
  *       500:
- *         description: Failed to retrieve products
+ *         description: Server error
  */
-export const getProducts = async (req: Request, res: Response) => {
-    try {
-        const products = await ProductModel.find({});
-        res.status(200).json(products);
-    } catch (error) {
-        res.status(500).json({ error: "Ntibishoboye kuboneka" });
-    }
+export const getAllProducts = async (req: Request, res: Response) => {
+  try {
+    const products = await ProductModel.find();
+    
+    return res.status(200).json({
+      message: "Products retrieved successfully",
+      count: products.length,
+      products
+    });
+  } catch (error: any) {
+    console.error("Get all products error:", error);
+    return res.status(500).json({
+      error: error.message || "Internal server error"
+    });
+  }
 };
+
 /**
  * @swagger
  * /products/{id}:
@@ -50,128 +148,47 @@ export const getProducts = async (req: Request, res: Response) => {
  *         description: Invalid product ID
  *       404:
  *         description: Product not found
+ *       500:
+ *         description: Server error
  */
 export const getProductById = async (req: Request, res: Response) => {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  try {
+    const { id } = req.params;
 
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ error: "ID y'igicuruzwa ntabwo ari yo" });
+    // Check if id exists
+    if (!id) {
+      return res.status(400).json({
+        error: "Product ID is required"
+      });
     }
 
-    try {
-        const product = await ProductModel.findById(id);
-        if (!product) return res.status(404).json({ error: "Iki gicuruzwa ntikiriho" });
-        res.status(200).json(product);
-    } catch (error) {
-        res.status(500).json({ error: "Ntibishoboye kuboneka" });
+    // Validate MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(id as string)) {
+      return res.status(400).json({
+        error: "Invalid product ID format"
+      });
     }
-};
-/**
- * @swagger
- * /products:
- *   post:
- *     summary: Create a new product
- *     tags: [Product]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - price
- *             properties:
- *               name:
- *                 type: string
- *                 example: "Laptop"
- *               description:
- *                 type: string
- *                 example: "High performance laptop"
- *               price:
- *                 type: number
- *                 example: 1200
- *               inStock:
- *                 type: boolean
- *                 example: true
- *     responses:
- *       201:
- *         description: Product created successfully
- *       400:
- *         description: Invalid input
- */
-export const createProduct = async (req: Request, res: Response) => {
-    try {
-        const product = new ProductModel(req.body);
-        await product.save();
-        res.status(201).json(product);
-    } catch (error: any) {
-        res.status(400).json({ error: error.message });
+
+    const product = await ProductModel.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        error: "Product not found"
+      });
     }
+
+    return res.status(200).json({
+      message: "Product retrieved successfully",
+      product
+    });
+  } catch (error: any) {
+    console.error("Get product error:", error);
+    return res.status(500).json({
+      error: error.message || "Internal server error"
+    });
+  }
 };
 
-
-/**
- * @swagger
- * /products/{id}:
- *   delete:
- *     summary: Delete a product
- *     tags: [Product]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Product ID
- *     responses:
- *       200:
- *         description: Product deleted successfully
- *       400:
- *         description: Invalid product ID
- *       404:
- *         description: Product not found
- */
-export const deleteProduct = async (req: Request, res: Response) => {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ error: "ID y'igicuruzwa ntabwo ari yo" });
-    }
-
-    try {
-        const product = await ProductModel.findByIdAndDelete(id);
-        if (!product) return res.status(404).json({ error: "Iki gicuruzwa ntikiriho" });
-        res.status(200).json({ message: "Byasibwe neza" });
-    } catch (error) {
-        res.status(500).json({ error: "Gusiba byanze" });
-    }
-};
-/**
- * @swagger
- * /products:
- *   delete:
- *     summary: Delete all products (Admin only)
- *     tags: [Product]
- *     security:
- *       - bearerAuth: []   # if you use JWT auth
- *     responses:
- *       200:
- *         description: All products deleted successfully
- *       500:
- *         description: Failed to delete products
- */
-
-
-// Delete all products (Admin only)
-export const deleteAllProducts = async (req: Request, res: Response) => {
-    try {
-        await ProductModel.deleteMany({});
-        res.status(200).json({ message: "Byose byasibwe neza" });
-    } catch (error) {
-        res.status(500).json({ error: "Gusiba byanze" });
-    }
-};
 /**
  * @swagger
  * /products/{id}:
@@ -179,7 +196,7 @@ export const deleteAllProducts = async (req: Request, res: Response) => {
  *     summary: Update a product
  *     tags: [Product]
  *     security:
- *       - bearerAuth: []   # if you use JWT auth
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -200,6 +217,8 @@ export const deleteAllProducts = async (req: Request, res: Response) => {
  *                 type: string
  *               price:
  *                 type: number
+ *               category:
+ *                 type: string
  *               inStock:
  *                 type: boolean
  *             example:
@@ -214,20 +233,158 @@ export const deleteAllProducts = async (req: Request, res: Response) => {
  *         description: Invalid input
  *       404:
  *         description: Product not found
+ *       500:
+ *         description: Server error
  */
-
 export const updateProduct = async (req: Request, res: Response) => {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  try {
+    const { id } = req.params;
 
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ error: "ID y'igicuruzwa ntabwo ari yo" });
+    // Check if id exists
+    if (!id) {
+      return res.status(400).json({
+        error: "Product ID is required"
+      });
     }
 
-    try {
-        const product = await ProductModel.findByIdAndUpdate(id, req.body, { new: true });
-        if (!product) return res.status(404).json({ error: "Iki gicuruzwa ntikiriho" });
-        res.status(200).json(product);
-    } catch (error: any) {
-        res.status(400).json({ error: error.message });
+    // Validate MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(id as string)) {
+      return res.status(400).json({
+        error: "Invalid product ID format"
+      });
     }
+
+    // Validate price if provided
+    if (req.body.price !== undefined) {
+      if (typeof req.body.price !== 'number' || req.body.price <= 0) {
+        return res.status(400).json({
+          error: "Price must be a positive number"
+        });
+      }
+    }
+
+    const product = await ProductModel.findByIdAndUpdate(
+      id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({
+        error: "Product not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Product updated successfully",
+      product
+    });
+  } catch (error: any) {
+    console.error("Update product error:", error);
+    return res.status(400).json({
+      error: error.message || "Invalid input"
+    });
+  }
 };
+
+/**
+ * @swagger
+ * /products/{id}:
+ *   delete:
+ *     summary: Delete a product
+ *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Product ID
+ *     responses:
+ *       200:
+ *         description: Product deleted successfully
+ *       400:
+ *         description: Invalid product ID
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Server error
+ */
+export const deleteProduct = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Check if id exists
+    if (!id) {
+      return res.status(400).json({
+        error: "Product ID is required"
+      });
+    }
+
+    // Validate MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(id as string)) {
+      return res.status(400).json({
+        error: "Invalid product ID format"
+      });
+    }
+
+    const product = await ProductModel.findByIdAndDelete(id);
+
+    if (!product) {
+      return res.status(404).json({
+        error: "Product not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: "Product deleted successfully",
+      product
+    });
+  } catch (error: any) {
+    console.error("Delete product error:", error);
+    return res.status(500).json({
+      error: error.message || "Internal server error"
+    });
+  }
+};
+
+/**
+ * @swagger
+ * /products:
+ *   delete:
+ *     summary: Delete all products (Admin only)
+ *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All products deleted successfully
+ *       403:
+ *         description: Forbidden - Admin only
+ *       500:
+ *         description: Server error
+ */
+export const deleteAllProducts = async (req: any, res: Response) => {
+  try {
+    // Check if user is Admin
+    if (req.userRole !== 'Admin') {
+      return res.status(403).json({
+        error: "Forbidden - Only admins can delete all products"
+      });
+    }
+
+    const result = await ProductModel.deleteMany({});
+
+    return res.status(200).json({
+      message: "All products deleted successfully",
+      deletedCount: result.deletedCount
+    });
+  } catch (error: any) {
+    console.error("Delete all products error:", error);
+    return res.status(500).json({
+      error: error.message || "Internal server error"
+    });
+  }
+}; 

@@ -1,27 +1,23 @@
-import { Router } from 'express';
 import { 
-    getProducts, 
-    createProduct, 
-    updateProduct, 
-    deleteProduct, 
-    deleteAllProducts // <--- Added this import
+  createProduct, 
+  getAllProducts,
+  getProductById, 
+  updateProduct, 
+  deleteProduct,
+  deleteAllProducts 
 } from '../controllers/productController';
-import { protect } from '../middleware/authMiddleware';
-import { authorize } from '../middleware/roleMiddleware';
+import { protect, roleCheck } from '../middleware/authMiddleware';
 
-const router = Router();
+const router = require('express').Router();
 
-// Public route
-router.get('/', getProducts); 
+// Public routes
+router.get('/', getAllProducts);
+router.get('/:id', getProductById);
 
-// Admin & Vendor routes
-router.post('/', protect, authorize('Admin', 'Vendor'), createProduct);
-router.put('/:id', protect, authorize('Admin', 'Vendor'), updateProduct);
-router.delete('/:id', protect, authorize('Admin', 'Vendor'), deleteProduct);
-
-// Admin ONLY route (Delete All)
-// Admin ONLY route (Delete All)
-router.delete('/', protect, authorize('Admin'), deleteAllProducts); 
-
+// Protected routes (require authentication)
+router.post('/', protect, createProduct);
+router.put('/:id', protect, updateProduct);
+router.delete('/:id', protect, deleteProduct);
+router.delete('/', protect, roleCheck('Admin'), deleteAllProducts);
 
 export default router;
