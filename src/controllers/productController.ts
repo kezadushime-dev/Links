@@ -40,10 +40,8 @@ const ProductModel = Product as Model<IProduct>;
  *                 example: 1200
  *               category:
  *                 type: string
- *                 example: "Electronics"
- *               vendorId:
- *                 type: string
- *                 example: "696a2d68cd2bb6ed2833c06b"
+ *                 description: "Valid MongoDB ObjectId"
+ *                 example: "696dc79c288a7dee75fea400"
  *               inStock:
  *                 type: boolean
  *                 example: true
@@ -65,6 +63,13 @@ export const createProduct = async (req: any, res: Response) => {
     if (!name || !price || !category) {
       return res.status(400).json({
         error: "Missing required fields: name, price, category"
+      });
+    }
+
+    // Validate category is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(category as string)) {
+      return res.status(400).json({
+        error: "Invalid category ID format. Category must be a valid MongoDB ObjectId"
       });
     }
 
@@ -103,8 +108,19 @@ export const createProduct = async (req: any, res: Response) => {
  * @swagger
  * /products:
  *   get:
- *     summary: Get all products
+ *     summary: Get all products with optional filtering
  *     tags: [Product]
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Filter by category ID
+ *       - in: query
+ *         name: inStock
+ *         schema:
+ *           type: boolean
+ *         description: Filter by stock status
  *     responses:
  *       200:
  *         description: Products retrieved successfully
@@ -113,8 +129,18 @@ export const createProduct = async (req: any, res: Response) => {
  */
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
-    const products = await ProductModel.find();
-    
+    const { category, inStock } = req.query;
+
+    // Build filter object
+    const filter: any = {};
+    if (category) filter.category = category;
+    if (inStock !== undefined) filter.inStock = inStock === 'true';
+
+    const products = await ProductModel.find(filter)
+      .populate('category', 'name')
+      .populate('vendorId', 'username email')
+      .sort({ createdAt: -1 });
+
     return res.status(200).json({
       message: "Products retrieved successfully",
       count: products.length,
@@ -132,7 +158,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
  * @swagger
  * /products/{id}:
  *   get:
- *     summary: Get product by ID
+ *     summary: Get a single product by ID
  *     tags: [Product]
  *     parameters:
  *       - in: path
@@ -169,7 +195,9 @@ export const getProductById = async (req: Request, res: Response) => {
       });
     }
 
-    const product = await ProductModel.findById(id);
+    const product = await ProductModel.findById(id)
+      .populate('category', 'name')
+      .populate('vendorId', 'username email');
 
     if (!product) {
       return res.status(404).json({
@@ -254,6 +282,13 @@ export const updateProduct = async (req: Request, res: Response) => {
       });
     }
 
+    // Validate category if provided
+    if (req.body.category && !mongoose.Types.ObjectId.isValid(req.body.category as string)) {
+      return res.status(400).json({
+        error: "Invalid category ID format. Category must be a valid MongoDB ObjectId"
+      });
+    }
+
     // Validate price if provided
     if (req.body.price !== undefined) {
       if (typeof req.body.price !== 'number' || req.body.price <= 0) {
@@ -267,7 +302,9 @@ export const updateProduct = async (req: Request, res: Response) => {
       id,
       req.body,
       { new: true, runValidators: true }
-    );
+    )
+      .populate('category', 'name')
+      .populate('vendorId', 'username email');
 
     if (!product) {
       return res.status(404).json({
@@ -291,7 +328,7 @@ export const updateProduct = async (req: Request, res: Response) => {
  * @swagger
  * /products/{id}:
  *   delete:
- *     summary: Delete a product
+ *     summary: Delete a single product
  *     tags: [Product]
  *     security:
  *       - bearerAuth: []
@@ -387,4 +424,4 @@ export const deleteAllProducts = async (req: any, res: Response) => {
       error: error.message || "Internal server error"
     });
   }
-}; 
+};
