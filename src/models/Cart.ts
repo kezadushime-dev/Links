@@ -1,25 +1,34 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ICart extends Document {
+    userId: mongoose.Types.ObjectId;
     productId: mongoose.Types.ObjectId;
-    userId: mongoose.Types.ObjectId; // Twongeyeho uyu murongo
     quantity: number;
-    addedAt: Date;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
-const CartSchema: Schema = new Schema({
-    productId: { 
-        type: Schema.Types.ObjectId, 
-        ref: 'Product', 
-        required: true 
+const CartSchema: Schema = new Schema(
+    {
+        userId: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: [true, "User ID is required"],
+            index: true
+        },
+        productId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Product',
+            required: [true, "Product ID is required"]
+        },
+        quantity: {
+            type: Number,
+            required: [true, "Quantity is required"],
+            min: [1, "Quantity must be at least 1"],
+            default: 1
+        }
     },
-    userId: { 
-        type: Schema.Types.ObjectId, 
-        ref: 'User', // Bihura na User Model yo muri Task 0
-        required: true 
-    },
-    quantity: { type: Number, default: 1 },
-    addedAt: { type: Date, default: Date.now }
-});
+    { timestamps: true }
+);
 
 export default mongoose.model<ICart>('Cart', CartSchema);

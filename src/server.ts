@@ -9,6 +9,7 @@ import authRoutes from './routes/authRoutes';
 import productRoutes from './routes/productsRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import cartRoutes from './routes/cartRoutes';
+import orderRoutes from './routes/orderRoutes';
 
 
 dotenv.config();
@@ -41,7 +42,9 @@ mongoose.connect(MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/orders', orderRoutes);
 app.use('/api/cart', cartRoutes);
+
 
 
 const PORT = process.env.PORT || 3000;

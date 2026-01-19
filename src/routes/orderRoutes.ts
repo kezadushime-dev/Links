@@ -12,35 +12,54 @@ import { protect, roleCheck } from '../middleware/authMiddleware';
 const router = Router();
 
 /**
- * Customer Routes (Protected)
+ * ========================================
+ * CUSTOMER ROUTES (Protected)
+ * ========================================
  */
 
-// Create a new order from cart
-// POST /api/orders
+/**
+ * POST /api/orders
+ * Create a new order from user's cart
+ */
 router.post('/', protect, createOrder);
 
-// Get all user's orders
-// GET /api/orders
+/**
+ * GET /api/orders
+ * Get all orders for logged-in user
+ * Query params: status, sortBy
+ */
 router.get('/', protect, getMyOrders);
 
-// Get single order by ID (own order only)
-// GET /api/orders/:id
+/**
+ * GET /api/orders/:id
+ * Get a single order by ID or Order Number (own order only)
+ */
 router.get('/:id', protect, getOrderById);
 
-// Cancel order (only if pending)
-// PATCH /api/orders/:id/cancel
+/**
+ * PATCH /api/orders/:id/cancel
+ * Cancel an order (only if status is pending)
+ */
 router.patch('/:id/cancel', protect, cancelOrder);
 
 /**
- * Admin Routes (Protected + Admin Role)
+ * ========================================
+ * ADMIN ROUTES (Protected + Admin Role)
+ * ========================================
  */
 
-// Get all orders (all users)
-// GET /api/admin/orders
+/**
+ * GET /api/admin/orders
+ * Get all orders (all users)
+ * Query params: status, userId
+ */
 router.get('/admin/orders', protect, roleCheck('Admin'), getAllOrders);
 
-// Update order status
-// PATCH /api/admin/orders/:id/status
+/**
+ * PATCH /api/admin/orders/:id/status
+ * Update order status (Admin only)
+ * Body: { status, notes? }
+ */
 router.patch('/admin/orders/:id/status', protect, roleCheck('Admin'), updateOrderStatus);
 
 export default router;
